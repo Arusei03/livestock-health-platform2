@@ -6,7 +6,9 @@ const SPECIES = ["Cow", "Goat", "Sheep", "Pig", "Chicken", "Other"];
 const EVENT_TYPES = ["Symptom", "Treatment"];
 const SYMPTOMS = ["Cough", "Fever", "Diarrhoea", "Not eating", "Limping", "Skin lumps or sores", "Nose or eye discharge", "Weakness", "Other"];
 const VACCINE_SUGGESTIONS = ["FMD", "Anthrax", "Black quarter", "Lumpy skin disease", "PPR", "Sheep and goat pox", "Newcastle disease", "Brucellosis", "Rabies"];
-const SOON_DAYS = 14;
+const SOON_DAYS = 14;        // "Due soon" badge and the red alert count
+const UPCOMING_DAYS = 183;   // vaccines due within about 6 months are listed as upcoming
+const NEXT_DOSE_MONTHS = 6;  // next due date defaults to this many months after the date given
 
 /* Risk rules: change these numbers to tune the detection. A vet should confirm the right values. */
 const REPEAT_WINDOW = 14; // days: look-back for repeated sickness in one animal
@@ -21,6 +23,7 @@ const LEVEL_LABEL = { ok: "Healthy", watch: "Under observation", high: "High ris
 const uid = () => Math.random().toString(36).slice(2, 10);
 const addDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString("en-CA"); };
 const todayISO = () => addDays(0);
+const addMonths = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setMonth(d.getMonth() + n); return d.toLocaleDateString("en-CA"); };
 const daysUntil = (iso) => Math.round((new Date(iso + "T00:00:00") - new Date(new Date().toDateString())) / 864e5);
 const ageDays = (iso) => -daysUntil(iso);
 const fmt = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
@@ -46,7 +49,7 @@ function dueItems(a) {
 }
 
 const dueClass = (days) => (days < 0 ? "overdue" : days <= SOON_DAYS ? "soon" : "ok");
-const DUE_LABEL = { overdue: "Overdue", soon: "Due soon", ok: "Up to date" };
+const DUE_LABEL = { overdue: "Overdue", soon: "Due soon", ok: "Upcoming" };
 
 function dueText(days) {
   if (days < 0) return `${-days} day${days === -1 ? "" : "s"} overdue`;
@@ -58,7 +61,7 @@ function dueText(days) {
 const symptomsOf = (a) => a.health.filter((h) => h.type === "Symptom");
 const symptomName = (h) => h.symptom || h.notes || "symptom";
 
-function assess(animals) {
+function assess(animals, farmArea) {
   const by = {};
   const alerts = [];
   animals.forEach((a) => { by[a.id] = { level: 0, reasons: [] }; });
@@ -75,7 +78,7 @@ function assess(animals) {
     if (inWindow.length >= REPEAT_HIGH) {
       raise(a.id, 2, `${inWindow.length} symptom reports in ${REPEAT_WINDOW} days`);
       alerts.push({
-        key: `animal:${a.id}`, title: `${a.name} keeps getting sick`, area: a.area, animalIds: [a.id],
+        key: `animal:${a.id}`, title: `${a.tag} keeps getting sick`, animalIds: [a.id],
         detail: `${inWindow.length} symptom reports in the last ${REPEAT_WINDOW} days: ${inWindow.map(symptomName).join(", ")}.`,
       });
     } else if (inWindow.length === 2) {
@@ -92,7 +95,7 @@ function assess(animals) {
   const areas = {};
   animals.forEach((a) => {
     if (symptomsOf(a).some((h) => ageDays(h.date) <= AREA_WINDOW)) {
-      const key = (a.area || "").trim() || "Unspecified area";
+      const key = (farmArea || "").trim() || "your farm";
       (areas[key] = areas[key] || []).push(a);
     }
   });
@@ -100,8 +103,8 @@ function assess(animals) {
     if (list.length >= AREA_HIGH) {
       list.forEach((a) => raise(a.id, 2, `${list.length} animals in ${area} have shown symptoms this week`));
       alerts.push({
-        key: `area:${area}`, title: `Possible outbreak in ${area}`, area, animalIds: list.map((a) => a.id),
-        detail: `${list.length} animals showed symptoms in the last ${AREA_WINDOW} days: ${list.map((a) => a.name).join(", ")}.`,
+        key: `area:${area}`, title: `Possible outbreak in ${area}`, animalIds: list.map((a) => a.id),
+        detail: `${list.length} animals showed symptoms in the last ${AREA_WINDOW} days: ${list.map((a) => a.tag).join(", ")}.`,
       });
     } else if (list.length === 2) {
       list.forEach((a) => raise(a.id, 1, `2 animals in ${area} have shown symptoms this week`));
@@ -115,7 +118,7 @@ function assess(animals) {
 function summaryText(alert, animals, user) {
   const lines = [`Livestock health alert from ${user.name} (${user.phone}), ${user.location}`, alert.title, alert.detail, ""];
   animals.filter((a) => alert.animalIds.includes(a.id)).forEach((a) => {
-    lines.push(`${a.name} (${a.tag}, ${a.species}, area: ${a.area || "not set"})`);
+    lines.push(`${a.tag} (${a.species}${a.breed ? `, ${a.breed}` : ""})`);
     a.health.filter((h) => h.type === "Symptom" || h.type === "Treatment")
       .sort((x, y) => y.date.localeCompare(x.date)).slice(0, 5)
       .forEach((h) => lines.push(`  ${fmt(h.date)} ${h.type}: ${h.type === "Symptom" ? symptomName(h) : ""}${h.notes && h.symptom ? ` - ${h.notes}` : h.type === "Treatment" ? h.notes : ""}`));
@@ -126,25 +129,25 @@ function summaryText(alert, animals, user) {
 function sampleAnimals() {
   return [
     {
-      id: uid(), tag: "KE-001", name: "Daisy", species: "Cow", breed: "Friesian", sex: "Female", birthDate: "2022-03-12", area: "North paddock",
+      id: uid(), tag: "Cow01", species: "Cow", breed: "Friesian", sex: "Female", birthDate: "2022-03-12",
       vaccinations: [
         { id: uid(), vaccine: "FMD", dateGiven: addDays(-200), nextDue: addDays(-5) },
         { id: uid(), vaccine: "Anthrax", dateGiven: addDays(-100), nextDue: addDays(265) },
       ],
       health: [
         { id: uid(), type: "Symptom", date: addDays(-9), symptom: "Cough", notes: "" },
-        { id: uid(), type: "Symptom", date: addDays(-5), symptom: "Not eating", notes: "Left most of her feed" },
+        { id: uid(), type: "Symptom", date: addDays(-5), symptom: "Not eating", notes: "Left most of the feed" },
         { id: uid(), type: "Treatment", date: addDays(-3), notes: "Antibiotic injection given by the vet" },
         { id: uid(), type: "Symptom", date: addDays(-2), symptom: "Fever", notes: "" },
       ],
     },
     {
-      id: uid(), tag: "KE-002", name: "Billy", species: "Goat", breed: "Boer", sex: "Male", birthDate: "2024-01-20", area: "North paddock",
+      id: uid(), tag: "Goat01", species: "Goat", breed: "Boer", sex: "Male", birthDate: "2024-01-20",
       vaccinations: [{ id: uid(), vaccine: "PPR", dateGiven: addDays(-170), nextDue: addDays(9) }],
       health: [{ id: uid(), type: "Symptom", date: addDays(-3), symptom: "Diarrhoea", notes: "Mild" }],
     },
     {
-      id: uid(), tag: "KE-003", name: "Wooly", species: "Sheep", breed: "Dorper", sex: "Female", birthDate: "2023-07-02", area: "South paddock",
+      id: uid(), tag: "Sheep01", species: "Sheep", breed: "Dorper", sex: "Female", birthDate: "2023-07-02",
       vaccinations: [
         { id: uid(), vaccine: "Sheep and goat pox", dateGiven: addDays(-60), nextDue: addDays(305) },
         { id: uid(), vaccine: "Enterotoxaemia", dateGiven: addDays(-150), nextDue: addDays(30) },
@@ -243,29 +246,33 @@ function Auth({ users, onSignup, onLogin }) {
 }
 
 /* ---------- forms ---------- */
+function nextTag(species, animals) {
+  const base = species === "Other" ? "Animal" : species;
+  const re = new RegExp(`^${base}(\\d+)$`, "i");
+  const max = animals.reduce((m, a) => { const x = re.exec(a.tag); return x ? Math.max(m, +x[1]) : m; }, 0);
+  return `${base}${String(max + 1).padStart(2, "0")}`;
+}
+
 function AnimalForm({ initial, animals, onSave }) {
-  const [f, setF] = useState(initial || { tag: "", name: "", species: "Cow", breed: "", sex: "Female", birthDate: "", area: "" });
+  const [f, setF] = useState(initial || { tag: nextTag("Cow", animals), species: "Cow", breed: "", sex: "Female", birthDate: "" });
+  const [tagTouched, setTagTouched] = useState(!!initial);
   const [err, setErr] = useState("");
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const areas = [...new Set(animals.map((a) => a.area).filter(Boolean))];
+  const setSpecies = (e) => { const species = e.target.value; setF({ ...f, species, tag: tagTouched ? f.tag : nextTag(species, animals) }); };
   function submit(e) {
     e.preventDefault();
-    if (!f.tag.trim() || !f.name.trim()) return setErr("Tag or ID number and name are required.");
-    if (!(f.area || "").trim()) return setErr("Enter the area or paddock where this animal stays. It helps spot outbreaks.");
-    if (animals.some((a) => a.tag.toLowerCase() === f.tag.trim().toLowerCase() && a.id !== initial?.id)) return setErr("Another animal already uses this tag or ID.");
+    if (!f.tag.trim()) return setErr("Enter an ID for this animal, for example Cow01.");
+    if (animals.some((a) => a.tag.toLowerCase() === f.tag.trim().toLowerCase() && a.id !== initial?.id)) return setErr("Another animal already uses this ID.");
     if (f.birthDate && f.birthDate > todayISO()) return setErr("Birth date cannot be in the future.");
-    onSave({ ...f, tag: f.tag.trim(), name: f.name.trim(), breed: f.breed.trim(), area: f.area.trim() });
+    onSave({ ...f, tag: f.tag.trim(), breed: f.breed.trim() });
   }
   return (
     <form onSubmit={submit} className="stack">
-      <Field label="Tag or ID number"><input value={f.tag} onChange={set("tag")} /></Field>
-      <Field label="Name"><input value={f.name} onChange={set("name")} /></Field>
-      <Field label="Species"><select value={f.species} onChange={set("species")}>{SPECIES.map((s) => <option key={s}>{s}</option>)}</select></Field>
+      <Field label="Species"><select value={f.species} onChange={setSpecies}>{SPECIES.map((s) => <option key={s}>{s}</option>)}</select></Field>
+      <Field label="Animal ID (for example Cow01)"><input value={f.tag} onChange={(e) => { setTagTouched(true); set("tag")(e); }} /></Field>
       <Field label="Breed"><input value={f.breed} onChange={set("breed")} /></Field>
       <Field label="Sex"><select value={f.sex} onChange={set("sex")}><option>Female</option><option>Male</option></select></Field>
       <Field label="Birth date"><input type="date" value={f.birthDate} onChange={set("birthDate")} max={todayISO()} /></Field>
-      <Field label="Area or paddock"><input list="areas" value={f.area || ""} onChange={set("area")} /></Field>
-      <datalist id="areas">{areas.map((a) => <option key={a} value={a} />)}</datalist>
       {err && <p className="error" role="alert">{err}</p>}
       <button className="btn btn-primary" type="submit">Save animal</button>
     </form>
@@ -273,7 +280,8 @@ function AnimalForm({ initial, animals, onSave }) {
 }
 
 function VaccForm({ initial, onSave }) {
-  const [f, setF] = useState(initial || { vaccine: "", dateGiven: todayISO(), nextDue: "" });
+  const [f, setF] = useState(initial || { vaccine: "", dateGiven: todayISO(), nextDue: addMonths(todayISO(), NEXT_DOSE_MONTHS) });
+  const [nextTouched, setNextTouched] = useState(!!initial);
   const [err, setErr] = useState("");
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   function submit(e) {
@@ -286,8 +294,8 @@ function VaccForm({ initial, onSave }) {
     <form onSubmit={submit} className="stack">
       <Field label="Vaccine name"><input list="vaccines" value={f.vaccine} onChange={set("vaccine")} /></Field>
       <datalist id="vaccines">{VACCINE_SUGGESTIONS.map((v) => <option key={v} value={v} />)}</datalist>
-      <Field label="Date given"><input type="date" value={f.dateGiven} onChange={set("dateGiven")} max={todayISO()} /></Field>
-      <Field label="Next due date"><input type="date" value={f.nextDue} onChange={set("nextDue")} /></Field>
+      <Field label="Date given"><input type="date" value={f.dateGiven} onChange={(e) => { const dateGiven = e.target.value; setF({ ...f, dateGiven, nextDue: nextTouched || !dateGiven ? f.nextDue : addMonths(dateGiven, NEXT_DOSE_MONTHS) }); }} max={todayISO()} /></Field>
+      <Field label="Next due date (6 months later by default)"><input type="date" value={f.nextDue} onChange={(e) => { setNextTouched(true); set("nextDue")(e); }} /></Field>
       {err && <p className="error" role="alert">{err}</p>}
       <button className="btn btn-primary" type="submit">Save vaccination</button>
     </form>
@@ -325,7 +333,7 @@ function EventForm({ initial, onSave }) {
 function Home({ animals, risk, go, openAdd, user, onLogout }) {
   const counts = [0, 0, 0];
   animals.forEach((a) => counts[risk.by[a.id].level]++);
-  const urgent = animals.flatMap((a) => dueItems(a).filter((d) => d.days <= SOON_DAYS).map((d) => ({ ...d, animal: a }))).sort((x, y) => x.days - y.days).slice(0, 3);
+  const urgent = animals.flatMap((a) => dueItems(a).filter((d) => d.days <= UPCOMING_DAYS).map((d) => ({ ...d, animal: a }))).sort((x, y) => x.days - y.days).slice(0, 4);
   const tiles = [[2, "High risk"], [1, "Under observation"], [0, "Healthy"]];
   return (
     <section className="stack">
@@ -351,11 +359,11 @@ function Home({ animals, risk, go, openAdd, user, onLogout }) {
         </>
       )}
       <h2>Vaccinations to plan</h2>
-      {urgent.length === 0 ? <p className="empty">No vaccinations are due in the next {SOON_DAYS} days.</p> : (
+      {urgent.length === 0 ? <p className="empty">No vaccinations are due in the next 6 months.</p> : (
         <ul className="list">
           {urgent.map((d, i) => (
             <li key={i}><button className="row" onClick={() => go("detail", d.animal.id)}>
-              <span><b>{d.animal.name}</b> needs {d.vaccine}<small>{dueText(d.days)} · {fmt(d.nextDue)}</small></span>
+              <span><b>{d.animal.tag}</b> needs {d.vaccine}<small>{dueText(d.days)} · {fmt(d.nextDue)}</small></span>
               <span className={`badge badge-${dueClass(d.days)}`}>{DUE_LABEL[dueClass(d.days)]}</span>
             </button></li>
           ))}
@@ -371,7 +379,7 @@ function AnimalList({ animals, risk, filters, setFilters, go, openAdd, loadSampl
   const vaccineNames = useMemo(() => [...new Set(animals.flatMap((a) => a.vaccinations.map((v) => v.vaccine)))].sort(), [animals]);
   const shown = animals.filter((a) => {
     const q = filters.q.trim().toLowerCase();
-    if (q && !`${a.name} ${a.tag} ${a.breed} ${a.area || ""}`.toLowerCase().includes(q)) return false;
+    if (q && !`${a.tag} ${a.species} ${a.breed}`.toLowerCase().includes(q)) return false;
     if (filters.species && a.species !== filters.species) return false;
     if (filters.vaccine && !a.vaccinations.some((v) => v.vaccine === filters.vaccine)) return false;
     if (filters.status && LEVELS[risk.by[a.id].level] !== filters.status) return false;
@@ -382,7 +390,7 @@ function AnimalList({ animals, risk, filters, setFilters, go, openAdd, loadSampl
   return (
     <section className="stack">
       <h1>Animals</h1>
-      <input className="search" type="search" placeholder="Search by name, tag, breed or area" value={filters.q} onChange={set("q")} aria-label="Search animals" />
+      <input className="search" type="search" placeholder="Search by ID, species or breed" value={filters.q} onChange={set("q")} aria-label="Search animals" />
       <div className="filters">
         <select value={filters.species} onChange={set("species")} aria-label="Filter by species"><option value="">All species</option>{SPECIES.map((s) => <option key={s}>{s}</option>)}</select>
         <select value={filters.vaccine} onChange={set("vaccine")} aria-label="Filter by vaccine"><option value="">Any vaccine</option>{vaccineNames.map((v) => <option key={v}>{v}</option>)}</select>
@@ -397,8 +405,8 @@ function AnimalList({ animals, risk, filters, setFilters, go, openAdd, loadSampl
             const r = risk.by[a.id];
             return (
               <li key={a.id}><button className="row" onClick={() => go("detail", a.id)}>
-                <span><b>{a.name}</b> <em>{a.tag}</em>
-                  <small>{a.species}{a.breed && ` · ${a.breed}`} · {a.sex}{a.area && ` · ${a.area}`}</small>
+                <span><b>{a.tag}</b>
+                  <small>{a.species}{a.breed && ` · ${a.breed}`} · {a.sex}</small>
                   {r.level > 0 && <small className="why">{r.reasons[0]}</small>}
                 </span>
                 <Risk level={r.level} />
@@ -413,12 +421,12 @@ function AnimalList({ animals, risk, filters, setFilters, go, openAdd, loadSampl
 }
 
 function Alerts({ animals, risk, notified, markNotified, copySummary, go }) {
-  const items = animals.flatMap((a) => dueItems(a).filter((d) => d.days <= 30).map((d) => ({ ...d, animal: a }))).sort((x, y) => x.days - y.days);
+  const items = animals.flatMap((a) => dueItems(a).filter((d) => d.days <= UPCOMING_DAYS).map((d) => ({ ...d, animal: a }))).sort((x, y) => x.days - y.days);
   return (
     <section className="stack">
       <h1>Alerts</h1>
       <h2>Flagged for your vet</h2>
-      <p className="lead">The app checks your logs after every entry. It flags an animal that falls sick repeatedly in {REPEAT_WINDOW} days, or {AREA_HIGH} or more animals with symptoms in one area within {AREA_WINDOW} days.</p>
+      <p className="lead">The app checks your logs after every entry. It flags an animal that falls sick repeatedly in {REPEAT_WINDOW} days, or {AREA_HIGH} or more animals with symptoms within {AREA_WINDOW} days.</p>
       {risk.alerts.length === 0 ? <p className="empty">No high-risk patterns found. Keep logging symptoms and treatments as they happen.</p> : (
         <ul className="list">
           {risk.alerts.map((al) => (
@@ -430,17 +438,17 @@ function Alerts({ animals, risk, notified, markNotified, copySummary, go }) {
                 <button className="btn btn-primary" onClick={() => copySummary(al)}>Copy summary for vet</button>
                 <button className="btn" onClick={() => markNotified(al.key)} disabled={!!notified[al.key]}>{notified[al.key] ? "Vet informed" : "Mark vet informed"}</button>
               </div>
-              <div className="tl-actions">{al.animalIds.map((id) => { const a = animals.find((x) => x.id === id); return a && <button key={id} className="link" onClick={() => go("detail", id)}>Open {a.name}</button>; })}</div>
+              <div className="tl-actions">{al.animalIds.map((id) => { const a = animals.find((x) => x.id === id); return a && <button key={id} className="link" onClick={() => go("detail", id)}>Open {a.tag}</button>; })}</div>
             </li>
           ))}
         </ul>
       )}
-      <h2>Vaccination reminders</h2>
-      {items.length === 0 ? <p className="empty">No vaccinations are due in the next 30 days.</p> : (
+      <h2>Vaccinations in the next 6 months</h2>
+      {items.length === 0 ? <p className="empty">No vaccinations are due in the next 6 months.</p> : (
         <ul className="list">
           {items.map((d, i) => (
             <li key={i}><button className="row" onClick={() => go("detail", d.animal.id)}>
-              <span><b>{d.vaccine}</b> for {d.animal.name}<small>{dueText(d.days)} · {fmt(d.nextDue)}</small></span>
+              <span><b>{d.vaccine}</b> for {d.animal.tag}<small>{dueText(d.days)} · {fmt(d.nextDue)}</small></span>
               <span className={`badge badge-${dueClass(d.days)}`}>{DUE_LABEL[dueClass(d.days)]}</span>
             </button></li>
           ))}
@@ -463,10 +471,10 @@ function Detail({ animal, risk, go, edit, remove, openModal, removeRecord }) {
     <section className="stack">
       <button className="btn btn-ghost back" onClick={() => go("animals")}>Back to animals</button>
       <div className="head">
-        <h1>{animal.name}</h1>
+        <h1>{animal.tag}</h1>
         <Risk level={r.level} />
       </div>
-      <p className="lead">{animal.tag} · {animal.species}{animal.breed && ` · ${animal.breed}`} · {animal.sex}{animal.area && ` · ${animal.area}`}{animal.birthDate && ` · born ${fmt(animal.birthDate)} (${ageOf(animal.birthDate)})`}</p>
+      <p className="lead">{animal.species}{animal.breed && ` · ${animal.breed}`} · {animal.sex}{animal.birthDate && ` · born ${fmt(animal.birthDate)} (${ageOf(animal.birthDate)})`}</p>
       {r.level > 0 && (
         <div className={`banner banner-${LEVELS[r.level]}`}>
           <b>{r.level === 2 ? "Flagged as high risk. Contact your vet." : "Keep watching this animal."}</b>
@@ -514,7 +522,7 @@ function Tracker({ user, onLogout }) {
   const online = useOnline();
   const { animals } = data;
   const notified = data.notified || {};
-  const risk = assess(animals); // re-scanned on every render, so any new log updates every status
+  const risk = assess(animals, user.location); // re-scanned on every render, so any new log updates every status
 
   const notify = (m, ms = 2800) => { setToast(m); setTimeout(() => setToast(""), ms); };
   const go = (page, id = null, f) => { if (f) setFilters({ q: "", species: "", vaccine: "", status: "", ...f }); setView({ page, id }); window.scrollTo(0, 0); };
@@ -547,13 +555,13 @@ function Tracker({ user, onLogout }) {
     const rec = modal.record;
     const nextHealth = rec ? current.health.map((h) => (h.id === rec.id ? { ...h, ...values } : h)) : [...current.health, { ...values, id: uid() }];
     const before = new Set(risk.alerts.map((x) => x.key));
-    const fresh = assess(animals.map((a) => (a.id === current.id ? { ...a, health: nextHealth } : a))).alerts.find((x) => !before.has(x.key));
+    const fresh = assess(animals.map((a) => (a.id === current.id ? { ...a, health: nextHealth } : a)), user.location).alerts.find((x) => !before.has(x.key));
     patch(current.id, (a) => ({ ...a, health: nextHealth }));
     if (fresh) notify(`High risk flagged: ${fresh.title}. Open Alerts to tell your vet.`, 6000); else notify("Saved.");
     setModal(null);
   }
   function removeAnimal() {
-    if (!window.confirm(`Delete ${current.name} and all of their records? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete ${current.tag} and all of its records? This cannot be undone.`)) return;
     commit((l) => l.filter((a) => a.id !== current.id)); notify("Animal deleted."); go("animals");
   }
   function removeRecord(kind, id) {
