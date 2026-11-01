@@ -1,45 +1,54 @@
 Livestock & Farm Management System - Frontend & Deployment Guide
 
+## Introduction
 
-The process taken-
+We are members of the **AWS Student Builder Group at CUK**. Under the agenda of **Economic Participation and Livelihoods**, our group project focuses on creating economic opportunities and supporting sustainable livelihoods, with a particular focus on livestock farmers.
 
-1. Project Overview & Tech Stack
+Livestock health records and vaccination schedules can be scattered across farmers and veterinary professionals, making it difficult to track vaccinations and identify potential disease risks in time.
 
-Project Purpose: A digital platform to track livestock health, data, and management records.
+To address this, we propose a **centralized livestock health platform** for recording and accessing health information, tracking vaccination schedules, and analyzing data to identify unusual health patterns and flag potential disease risks for veterinary review. As reliable data grows, the platform can provide more useful, data-driven insights.
 
-Frontend Framework: React ,built using Vite for fast performance its modern
+## Getting Started
 
-Styling & UI: Custom CSS 
+### Prerequisites
 
-Version Control: GitHub.
+- [Node.js](https://nodejs.org/) and npm installed.
+- [Git](https://git-scm.com/) installed.
 
-Hosting & Cloud: AWS Amplify.
+### Installation
+For contributors: Fork this repository on GitHub before proceeding.
+
+1. Clone the repository:
+
+   ```bash
+   git clone <forked-repo-url>
+   ```
+
+2. Ensure you are in the project root directory.
+
+3. Install the project dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open the local URL displayed in your terminal, usually `http://localhost:5173`.
 
 
-2. What Has Been Done So Far
-
-Converted the initial functional HTML/JS prototype into a scalable, modern React/Vite application.
-
-The application has been fully tested and verified to run successfully on local development servers.
-
-Pushed the clean project structure (excluding heavy local dependencies) to a secure GitHub repository.
-
-Configured the foundation for cloud deployment via AWS Amplify.
+## Technology Stack — the technologies used and their roles.
+## Project Structure — how the codebase is organized.
+## Deployment — how the application is deployed to AWS Amplify and other aws services.
+## Contributing — branching, pull requests, and review guidelines.
+## Future Improvements — planned backend, database, and other features.
 
 
-3. How to Run the Project Locally
-   
-If you are pulling this code onto your own computer to work on it, follow these steps:
 
-Clone or Download the Repository from GitHub to your local machine.
-
-Open the Project in your code editor (e.g., VS Code).
-
-ensure npm is installed
-(This reads the package.json file and downloads all required React tools into a newly created node_modules folder).
-
-Start the Local Development Server:(npm run dev)
-View the App: Open your web browser and go to the local link provided in your terminal (usually http://localhost:5173).
 
 
 4.How to Deploy to AWS Amplify
@@ -56,6 +65,3 @@ AWS Amplify will automatically detect Vite/React settings. Click Save and deploy
 
 Once built, AWS will generate a live public URL that you can share for testing!
 
-
-5. Next Steps for the Team (Backend & Database)
-the next task.
