@@ -30,7 +30,10 @@ export type AnimalMinAggregateOutputType = {
   name: string | null
   species: string | null
   breed: string | null
-  vaccinationStatus: string | null
+  sex: string | null
+  dateOfBirth: Date | null
+  ageIsEstimated: boolean | null
+  imageKey: string | null
   notes: string | null
   ownerId: string | null
   createdAt: Date | null
@@ -43,7 +46,10 @@ export type AnimalMaxAggregateOutputType = {
   name: string | null
   species: string | null
   breed: string | null
-  vaccinationStatus: string | null
+  sex: string | null
+  dateOfBirth: Date | null
+  ageIsEstimated: boolean | null
+  imageKey: string | null
   notes: string | null
   ownerId: string | null
   createdAt: Date | null
@@ -56,7 +62,10 @@ export type AnimalCountAggregateOutputType = {
   name: number
   species: number
   breed: number
-  vaccinationStatus: number
+  sex: number
+  dateOfBirth: number
+  ageIsEstimated: number
+  imageKey: number
   notes: number
   ownerId: number
   createdAt: number
@@ -71,7 +80,10 @@ export type AnimalMinAggregateInputType = {
   name?: true
   species?: true
   breed?: true
-  vaccinationStatus?: true
+  sex?: true
+  dateOfBirth?: true
+  ageIsEstimated?: true
+  imageKey?: true
   notes?: true
   ownerId?: true
   createdAt?: true
@@ -84,7 +96,10 @@ export type AnimalMaxAggregateInputType = {
   name?: true
   species?: true
   breed?: true
-  vaccinationStatus?: true
+  sex?: true
+  dateOfBirth?: true
+  ageIsEstimated?: true
+  imageKey?: true
   notes?: true
   ownerId?: true
   createdAt?: true
@@ -97,7 +112,10 @@ export type AnimalCountAggregateInputType = {
   name?: true
   species?: true
   breed?: true
-  vaccinationStatus?: true
+  sex?: true
+  dateOfBirth?: true
+  ageIsEstimated?: true
+  imageKey?: true
   notes?: true
   ownerId?: true
   createdAt?: true
@@ -183,7 +201,10 @@ export type AnimalGroupByOutputType = {
   name: string | null
   species: string
   breed: string | null
-  vaccinationStatus: string | null
+  sex: string | null
+  dateOfBirth: Date | null
+  ageIsEstimated: boolean
+  imageKey: string | null
   notes: string | null
   ownerId: string
   createdAt: Date
@@ -217,7 +238,10 @@ export type AnimalWhereInput = {
   name?: Prisma.StringNullableFilter<"Animal"> | string | null
   species?: Prisma.StringFilter<"Animal"> | string
   breed?: Prisma.StringNullableFilter<"Animal"> | string | null
-  vaccinationStatus?: Prisma.StringNullableFilter<"Animal"> | string | null
+  sex?: Prisma.StringNullableFilter<"Animal"> | string | null
+  dateOfBirth?: Prisma.DateTimeNullableFilter<"Animal"> | Date | string | null
+  ageIsEstimated?: Prisma.BoolFilter<"Animal"> | boolean
+  imageKey?: Prisma.StringNullableFilter<"Animal"> | string | null
   notes?: Prisma.StringNullableFilter<"Animal"> | string | null
   ownerId?: Prisma.StringFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
@@ -232,7 +256,10 @@ export type AnimalOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   species?: Prisma.SortOrder
   breed?: Prisma.SortOrderInput | Prisma.SortOrder
-  vaccinationStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  sex?: Prisma.SortOrderInput | Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageIsEstimated?: Prisma.SortOrder
+  imageKey?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   ownerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -243,21 +270,25 @@ export type AnimalOrderByWithRelationInput = {
 
 export type AnimalWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  tagNumber?: string
+  ownerId_tagNumber?: Prisma.AnimalOwnerIdTagNumberCompoundUniqueInput
   AND?: Prisma.AnimalWhereInput | Prisma.AnimalWhereInput[]
   OR?: Prisma.AnimalWhereInput[]
   NOT?: Prisma.AnimalWhereInput | Prisma.AnimalWhereInput[]
+  tagNumber?: Prisma.StringFilter<"Animal"> | string
   name?: Prisma.StringNullableFilter<"Animal"> | string | null
   species?: Prisma.StringFilter<"Animal"> | string
   breed?: Prisma.StringNullableFilter<"Animal"> | string | null
-  vaccinationStatus?: Prisma.StringNullableFilter<"Animal"> | string | null
+  sex?: Prisma.StringNullableFilter<"Animal"> | string | null
+  dateOfBirth?: Prisma.DateTimeNullableFilter<"Animal"> | Date | string | null
+  ageIsEstimated?: Prisma.BoolFilter<"Animal"> | boolean
+  imageKey?: Prisma.StringNullableFilter<"Animal"> | string | null
   notes?: Prisma.StringNullableFilter<"Animal"> | string | null
   ownerId?: Prisma.StringFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
   alerts?: Prisma.AlertListRelationFilter
   owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-}, "id" | "tagNumber">
+}, "id" | "ownerId_tagNumber">
 
 export type AnimalOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -265,7 +296,10 @@ export type AnimalOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   species?: Prisma.SortOrder
   breed?: Prisma.SortOrderInput | Prisma.SortOrder
-  vaccinationStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  sex?: Prisma.SortOrderInput | Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageIsEstimated?: Prisma.SortOrder
+  imageKey?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   ownerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -284,7 +318,10 @@ export type AnimalScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
   species?: Prisma.StringWithAggregatesFilter<"Animal"> | string
   breed?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
-  vaccinationStatus?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
+  sex?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
+  dateOfBirth?: Prisma.DateTimeNullableWithAggregatesFilter<"Animal"> | Date | string | null
+  ageIsEstimated?: Prisma.BoolWithAggregatesFilter<"Animal"> | boolean
+  imageKey?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"Animal"> | string | null
   ownerId?: Prisma.StringWithAggregatesFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Animal"> | Date | string
@@ -297,7 +334,10 @@ export type AnimalCreateInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -311,7 +351,10 @@ export type AnimalUncheckedCreateInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   ownerId: string
   createdAt?: Date | string
@@ -325,7 +368,10 @@ export type AnimalUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -339,7 +385,10 @@ export type AnimalUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownerId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -353,7 +402,10 @@ export type AnimalCreateManyInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   ownerId: string
   createdAt?: Date | string
@@ -366,7 +418,10 @@ export type AnimalUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -378,7 +433,10 @@ export type AnimalUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownerId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -395,13 +453,21 @@ export type AnimalOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type AnimalOwnerIdTagNumberCompoundUniqueInput = {
+  ownerId: string
+  tagNumber: string
+}
+
 export type AnimalCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   tagNumber?: Prisma.SortOrder
   name?: Prisma.SortOrder
   species?: Prisma.SortOrder
   breed?: Prisma.SortOrder
-  vaccinationStatus?: Prisma.SortOrder
+  sex?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrder
+  ageIsEstimated?: Prisma.SortOrder
+  imageKey?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   ownerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -414,7 +480,10 @@ export type AnimalMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   species?: Prisma.SortOrder
   breed?: Prisma.SortOrder
-  vaccinationStatus?: Prisma.SortOrder
+  sex?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrder
+  ageIsEstimated?: Prisma.SortOrder
+  imageKey?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   ownerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -427,7 +496,10 @@ export type AnimalMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   species?: Prisma.SortOrder
   breed?: Prisma.SortOrder
-  vaccinationStatus?: Prisma.SortOrder
+  sex?: Prisma.SortOrder
+  dateOfBirth?: Prisma.SortOrder
+  ageIsEstimated?: Prisma.SortOrder
+  imageKey?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   ownerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -481,6 +553,14 @@ export type AnimalUncheckedUpdateManyWithoutOwnerNestedInput = {
   deleteMany?: Prisma.AnimalScalarWhereInput | Prisma.AnimalScalarWhereInput[]
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
 export type AnimalCreateNestedOneWithoutAlertsInput = {
   create?: Prisma.XOR<Prisma.AnimalCreateWithoutAlertsInput, Prisma.AnimalUncheckedCreateWithoutAlertsInput>
   connectOrCreate?: Prisma.AnimalCreateOrConnectWithoutAlertsInput
@@ -503,7 +583,10 @@ export type AnimalCreateWithoutOwnerInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -516,7 +599,10 @@ export type AnimalUncheckedCreateWithoutOwnerInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -558,7 +644,10 @@ export type AnimalScalarWhereInput = {
   name?: Prisma.StringNullableFilter<"Animal"> | string | null
   species?: Prisma.StringFilter<"Animal"> | string
   breed?: Prisma.StringNullableFilter<"Animal"> | string | null
-  vaccinationStatus?: Prisma.StringNullableFilter<"Animal"> | string | null
+  sex?: Prisma.StringNullableFilter<"Animal"> | string | null
+  dateOfBirth?: Prisma.DateTimeNullableFilter<"Animal"> | Date | string | null
+  ageIsEstimated?: Prisma.BoolFilter<"Animal"> | boolean
+  imageKey?: Prisma.StringNullableFilter<"Animal"> | string | null
   notes?: Prisma.StringNullableFilter<"Animal"> | string | null
   ownerId?: Prisma.StringFilter<"Animal"> | string
   createdAt?: Prisma.DateTimeFilter<"Animal"> | Date | string
@@ -571,7 +660,10 @@ export type AnimalCreateWithoutAlertsInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -584,7 +676,10 @@ export type AnimalUncheckedCreateWithoutAlertsInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   ownerId: string
   createdAt?: Date | string
@@ -613,7 +708,10 @@ export type AnimalUpdateWithoutAlertsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -626,7 +724,10 @@ export type AnimalUncheckedUpdateWithoutAlertsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ownerId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -639,7 +740,10 @@ export type AnimalCreateManyOwnerInput = {
   name?: string | null
   species: string
   breed?: string | null
-  vaccinationStatus?: string | null
+  sex?: string | null
+  dateOfBirth?: Date | string | null
+  ageIsEstimated?: boolean
+  imageKey?: string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -651,7 +755,10 @@ export type AnimalUpdateWithoutOwnerInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -664,7 +771,10 @@ export type AnimalUncheckedUpdateWithoutOwnerInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -677,7 +787,10 @@ export type AnimalUncheckedUpdateManyWithoutOwnerInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   species?: Prisma.StringFieldUpdateOperationsInput | string
   breed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  vaccinationStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sex?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dateOfBirth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ageIsEstimated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  imageKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -720,7 +833,10 @@ export type AnimalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name?: boolean
   species?: boolean
   breed?: boolean
-  vaccinationStatus?: boolean
+  sex?: boolean
+  dateOfBirth?: boolean
+  ageIsEstimated?: boolean
+  imageKey?: boolean
   notes?: boolean
   ownerId?: boolean
   createdAt?: boolean
@@ -736,7 +852,10 @@ export type AnimalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   name?: boolean
   species?: boolean
   breed?: boolean
-  vaccinationStatus?: boolean
+  sex?: boolean
+  dateOfBirth?: boolean
+  ageIsEstimated?: boolean
+  imageKey?: boolean
   notes?: boolean
   ownerId?: boolean
   createdAt?: boolean
@@ -750,7 +869,10 @@ export type AnimalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   name?: boolean
   species?: boolean
   breed?: boolean
-  vaccinationStatus?: boolean
+  sex?: boolean
+  dateOfBirth?: boolean
+  ageIsEstimated?: boolean
+  imageKey?: boolean
   notes?: boolean
   ownerId?: boolean
   createdAt?: boolean
@@ -764,14 +886,17 @@ export type AnimalSelectScalar = {
   name?: boolean
   species?: boolean
   breed?: boolean
-  vaccinationStatus?: boolean
+  sex?: boolean
+  dateOfBirth?: boolean
+  ageIsEstimated?: boolean
+  imageKey?: boolean
   notes?: boolean
   ownerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type AnimalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tagNumber" | "name" | "species" | "breed" | "vaccinationStatus" | "notes" | "ownerId" | "createdAt" | "updatedAt", ExtArgs["result"]["animal"]>
+export type AnimalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tagNumber" | "name" | "species" | "breed" | "sex" | "dateOfBirth" | "ageIsEstimated" | "imageKey" | "notes" | "ownerId" | "createdAt" | "updatedAt", ExtArgs["result"]["animal"]>
 export type AnimalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   alerts?: boolean | Prisma.Animal$alertsArgs<ExtArgs>
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -796,7 +921,10 @@ export type $AnimalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     name: string | null
     species: string
     breed: string | null
-    vaccinationStatus: string | null
+    sex: string | null
+    dateOfBirth: Date | null
+    ageIsEstimated: boolean
+    imageKey: string | null
     notes: string | null
     ownerId: string
     createdAt: Date
@@ -1231,7 +1359,10 @@ export interface AnimalFieldRefs {
   readonly name: Prisma.FieldRef<"Animal", 'String'>
   readonly species: Prisma.FieldRef<"Animal", 'String'>
   readonly breed: Prisma.FieldRef<"Animal", 'String'>
-  readonly vaccinationStatus: Prisma.FieldRef<"Animal", 'String'>
+  readonly sex: Prisma.FieldRef<"Animal", 'String'>
+  readonly dateOfBirth: Prisma.FieldRef<"Animal", 'DateTime'>
+  readonly ageIsEstimated: Prisma.FieldRef<"Animal", 'Boolean'>
+  readonly imageKey: Prisma.FieldRef<"Animal", 'String'>
   readonly notes: Prisma.FieldRef<"Animal", 'String'>
   readonly ownerId: Prisma.FieldRef<"Animal", 'String'>
   readonly createdAt: Prisma.FieldRef<"Animal", 'DateTime'>

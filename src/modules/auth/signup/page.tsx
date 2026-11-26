@@ -2,23 +2,29 @@
 import { useState } from "react";
 import { signUp } from "aws-amplify/auth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
-interface SignupProps {
-  onSignIn: () => void;
-  onVerificationRequired: (email: string) => void;
-}
-
-const Signup = ({onSignIn,onVerificationRequired,}: SignupProps) => {
-  
+const Signup = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
 
- const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+  const navigate = useNavigate();
+
+  const handleSignIn = () => {
+    navigate("/login");
+  };
+
+  const handleVerificationRequired = (email: string) => {
+    navigate("/verify", {
+      state: { email },
+    });
+  };
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   if (password !== confirmPassword) {
@@ -42,7 +48,7 @@ const Signup = ({onSignIn,onVerificationRequired,}: SignupProps) => {
 
     if (result.nextStep.signUpStep === "CONFIRM_SIGN_UP") {
       toast.success("Account created successfully. Please verify your email.");
-      onVerificationRequired(email.trim());
+      handleVerificationRequired(email.trim());
     }
   } catch (err) {
     if (err instanceof Error) {
@@ -156,7 +162,7 @@ const Signup = ({onSignIn,onVerificationRequired,}: SignupProps) => {
           Have an account already?{" "}
           <button
             type="button"
-            onClick={onSignIn}
+            onClick={handleSignIn}
             className="font-medium text-primary hover:underline"
           >
             Sign in

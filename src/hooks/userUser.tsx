@@ -21,7 +21,7 @@ const fetchUser = async (): Promise<User> => {
     throw new Error("Access token unavailable.");
   }
 
-  const response = await userAxios.get("/auth/get-profile", {
+  const response = await userAxios.get("/api/get-profile", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

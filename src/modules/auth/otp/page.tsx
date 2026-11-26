@@ -4,23 +4,18 @@ import {
   resendSignUpCode,
 } from "aws-amplify/auth";
 import { toast } from "sonner";
+import { useNavigate, useLocation } from "react-router-dom";
 
-interface OtpProps {
-  email: string;
-  onSuccess: () => void;
-  onBackToLogin: () => void;
-}
+const Otp = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-const Otp = ({
-  email,
-  onSuccess,
-  onBackToLogin,
-}: OtpProps) => {
+  const email = location.state?.email ?? "";
+
   const [code, setCode] = useState("");
   const [codeRequested, setCodeRequested] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-
 
  const handleGetCode = async () => {
   try {
@@ -56,7 +51,7 @@ const handleConfirm = async (e: React.FormEvent<HTMLFormElement>) => {
 
     if (result.isSignUpComplete) {
       toast.success("Email verified successfully. Please sign in.");
-      onSuccess();
+     navigate("/login", { replace: true });
     }
   } catch (err) {
     if (err instanceof Error) {
@@ -96,6 +91,9 @@ const handleResend = async () => {
   } finally {
     setResending(false);
   }
+};
+const handleBackToLogin = () => {
+  navigate("/login");
 };
 
   return (
@@ -168,7 +166,7 @@ const handleResend = async () => {
 
         <button
           type="button"
-          onClick={onBackToLogin}
+          onClick={handleBackToLogin}
           disabled={loading || resending}
           className="mt-6 w-full text-sm text-foreground/70 hover:underline disabled:opacity-50"
         >

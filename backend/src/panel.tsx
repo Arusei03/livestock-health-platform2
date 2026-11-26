@@ -1,10 +1,10 @@
 import { Bell, X } from "lucide-react";
-import type { Alert } from "../../types/alert";
+
 
 type Props = {
-  alerts: Alert[];
+  alerts: any [];
   onClose: () => void;
-  onOpenAlert: (alert: Alert) => void;
+  onOpenAlert: (alert: any) => void;
 };
 
 const NotificationsPanel = ({ alerts, onClose, onOpenAlert }: Props) => (

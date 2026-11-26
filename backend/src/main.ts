@@ -1,9 +1,10 @@
 import express from "express";
-import { errorMiddleware } from "./packages/error-handler/error-middleware.js";
-import router from "./routes/page.js";
-import { prisma } from "./packages/prisma/index.js";
 import cors from "cors";
 import dotenv from "dotenv";
+import { errorMiddleware } from "./packages/error-handler/error-middleware.js";
+import { prisma } from "./packages/prisma/index.js";
+import router from "./routes/page.js";
+
 
 dotenv.config({ path: "../.env" });
 
@@ -15,116 +16,18 @@ const allowedOrigins = [
   "http://localhost:5173",
 ].filter((origin): origin is string => Boolean(origin));
 
-app.use(cors({
-  origin: allowedOrigins,
-  allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  })
+);
 
-// Middleware
 app.use(express.json());
 
 // Routes
-app.use("/auth", router);
-
-// Animals routes
-app.get("/animals", async (req, res, next) => {
-  try {
-    const animals = await prisma.animal.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    res.status(200).json(animals);
-  } catch (err) {
-    console.dir(err, { depth: null });
-    next(err);
-  }
-});
-
-app.post("/animals", async (req, res, next) => {
-  try {
-    const { tagNumber, name, species, breed, vaccinationStatus, notes, ownerId } = req.body;
-    const created = await prisma.animal.create({
-      data: {
-        tagNumber,
-        name,
-        species,
-        breed,
-        vaccinationStatus,
-        notes,
-        ownerId,
-      },
-    });
-    res.status(201).json(created);
-  } catch (err) {
-    console.dir(err, { depth: null });
-    next(err);
-  }
-});
-
-// Prisma uses error code P2025 when a record to update or delete does not exist
-const isNotFound = (err: unknown) => (err as { code?: string })?.code === "P2025";
-
-// Get one animal
-app.get("/animals/:id", async (req, res, next) => {
-  try {
-    const animal = await prisma.animal.findUnique({ where: { id: req.params.id } });
-    if (!animal) {
-      res.status(404).json({ error: "Animal not found" });
-      return;
-    }
-    res.status(200).json(animal);
-  } catch (err) {
-    console.dir(err, { depth: null });
-    next(err);
-  }
-});
-
-// Edit an animal (only the fields that are sent are changed)
-app.patch("/animals/:id", async (req, res, next) => {
-  try {
-    const { tagNumber, name, species, breed, vaccinationStatus, notes } = req.body;
-    const updated = await prisma.animal.update({
-      where: { id: req.params.id },
-      data: { tagNumber, name, species, breed, vaccinationStatus, notes },
-    });
-    res.status(200).json(updated);
-  } catch (err) {
-    if (isNotFound(err)) {
-      res.status(404).json({ error: "Animal not found" });
-      return;
-    }
-    console.dir(err, { depth: null });
-    next(err);
-  }
-});
-
-// Remove an animal
-app.delete("/animals/:id", async (req, res, next) => {
-  try {
-    await prisma.animal.delete({ where: { id: req.params.id } });
-    res.status(204).send();
-  } catch (err) {
-    if (isNotFound(err)) {
-      res.status(404).json({ error: "Animal not found" });
-      return;
-    }
-    console.dir(err, { depth: null });
-    next(err);
-  }
-});
-
-// Alerts routes
-app.get("/alerts", async (req, res, next) => {
-  try {
-    const alerts = await prisma.alert.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    res.status(200).json(alerts);
-  } catch (err) {
-    console.dir(err, { depth: null });
-    next(err);
-  }
-});
+app.use("/api", router);
 
 // Health check
 app.get("/health", (req, res) => {
@@ -134,27 +37,22 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Error handling (always after routes)
+// Error handling
 app.use(errorMiddleware);
 
-async function start() {
+// Start server
+const start = async () => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     console.log("Database connected");
 
-    // TEMPORARY DIAGNOSTIC: shows which database and tables the backend really sees.
-    // Delete these three lines once the animals page works.
-    const dbInfo = await prisma.$queryRaw`SELECT current_database() AS db`;
-    const tables = await prisma.$queryRaw`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
-    console.log("Backend sees:", dbInfo, tables);
+    app.listen(PORT, () => {
+      console.log(`Backend server running on port ${PORT}`);
+    });
   } catch (error) {
-    console.dir(error, { depth: null }); // shows the real cause instead of [Object]
+    console.error("Database connection failed:", error);
     process.exit(1);
   }
-
-  app.listen(PORT, () => {
-    console.log(`Backend server running on port ${PORT}`);
-  });
-}
+};
 
 start();

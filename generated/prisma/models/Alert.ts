@@ -469,10 +469,6 @@ export type AlertUncheckedUpdateManyWithoutAnimalNestedInput = {
   deleteMany?: Prisma.AlertScalarWhereInput | Prisma.AlertScalarWhereInput[]
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type AlertCreateWithoutUserInput = {
   id?: string
   title: string

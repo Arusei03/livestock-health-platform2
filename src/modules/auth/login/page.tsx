@@ -4,64 +4,105 @@ import { fetchAuthSession, getCurrentUser, signIn,signOut } from "aws-amplify/au
 import { toast } from "sonner";
 import { userAxios } from "../../../packages/axioxinstance";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
 
-interface LoginProps {
-  onSignUp: () => void;
-  onVerificationRequired: (email: string) => void;
-  onSuccess: () => void;
-}
 
-const Login = ({
-  onSignUp,
-  onVerificationRequired,
-  onSuccess,
-}: LoginProps) => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
- const queryClient = useQueryClient();
 
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
+  const handleLoginSuccess = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["user"] });
+    navigate("/overview", { replace: true });
+  };
 
+  const handleSignUp = () => {
+    navigate("/signup");
+  };
+
+  const handleVerificationRequired = (email: string) => {
+    navigate("/verify", {
+      state: { email },
+    });
+  };
 const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   try {
     setLoading(true);
 
-  const existingSession = await fetchAuthSession();
+    const enteredEmail = email.trim().toLowerCase();
 
-if (existingSession.tokens?.accessToken) {
-  const currentUser = await getCurrentUser();
+    // 1. Check for an existing session
+    const existingSession = await fetchAuthSession();
 
-  console.log("Current signed-in user:", currentUser);
+    if (existingSession.tokens?.accessToken) {
+      try {
+        // Check whether the existing session can still be refreshed
+        const refreshedSession = await fetchAuthSession({
+          forceRefresh: true,
+        });
 
-  if (
-    currentUser.signInDetails?.loginId?.toLowerCase() ===
-    email.trim().toLowerCase()
-  ) {
-    toast.error("You are already signed in.");
-    return;
-  }
+        if (!refreshedSession.tokens?.accessToken) {
+          throw new Error("Existing session is no longer valid.");
+        }
 
-  await signOut();
-  queryClient.removeQueries({ queryKey: ["user"] });
-}
+        const currentUser = await getCurrentUser();
 
-    // 2. Authenticate with the newly entered credentials
+        const currentEmail =
+          currentUser.signInDetails?.loginId?.toLowerCase();
+
+        // 2. Same account is already signed in
+        if (currentEmail === enteredEmail) {
+          const accessToken =
+            refreshedSession.tokens.accessToken.toString();
+
+          await userAxios.post(
+            "/api/confirm-profile",
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+          toast.info("You're already signed in.");
+          handleLoginSuccess();
+          return;
+        }
+
+        // 3. Different account: sign out before switching
+        await signOut();
+        queryClient.removeQueries({ queryKey: ["user"] });
+
+      } catch (sessionError) {
+        console.error("Existing session validation failed:", sessionError);
+
+        // Clear the invalid local session
+        await signOut();
+        queryClient.removeQueries({ queryKey: ["user"] });
+      }
+    }
+
+    // 4. Sign in with the entered credentials
     const result = await signIn({
       username: email.trim(),
       password,
     });
 
-    // 3. Handle unconfirmed accounts
+    // 5. Handle unconfirmed accounts
     if (result.nextStep.signInStep === "CONFIRM_SIGN_UP") {
-      onVerificationRequired(email.trim());
+      handleVerificationRequired(email.trim());
       return;
     }
 
-    // 4. Ensure sign-in is complete
+    // 6. Handle additional authentication steps
     if (!result.isSignedIn) {
       toast.error(
         `Additional sign-in step required: ${result.nextStep.signInStep}`
@@ -69,9 +110,7 @@ if (existingSession.tokens?.accessToken) {
       return;
     }
 
-    
-
-    // 5. Retrieve access token
+    // 7. Retrieve access token
     const session = await fetchAuthSession();
     const accessToken = session.tokens?.accessToken?.toString();
 
@@ -79,12 +118,9 @@ if (existingSession.tokens?.accessToken) {
       throw new Error("Access token unavailable.");
     }
 
-const payload = JSON.parse(atob(accessToken.split(".")[1]));
-console.log("Access token scopes:", payload.scope);
-
-    // 6. Confirm or create application user profile
+    // 8. Confirm or create the application profile
     const response = await userAxios.post(
-      "/auth/confirm-profile",
+      "/api/confirm-profile",
       {},
       {
         headers: {
@@ -95,35 +131,38 @@ console.log("Access token scopes:", payload.scope);
 
     console.log("User profile response:", response.data);
 
-    // 7. Enter the application only after backend success
+    // 9. Enter the application
+    await queryClient.invalidateQueries({ queryKey: ["user"] });
+
     toast.success("Signed in successfully!");
-    onSuccess();
+    handleLoginSuccess();
 
   } catch (err) {
-      if (err instanceof Error) {
-        if (err.name === "UserNotConfirmedException") {
-          onVerificationRequired(email.trim());
-        } else if (err.name === "UserNotFoundException") {
-          toast.error("No account found with this email address.");
-        } else if (err.name === "NotAuthorizedException") {
-          toast.error("Incorrect email or password.");
-        } else if (
-          err.name === "UserAlreadyAuthenticatedException" ||
-          err.message.toLowerCase().includes("already signed in")
-        ) {
-          onSuccess();
-        } else {
-          console.error("Sign-in error:", err);
-          toast.error(err.message);
-        }
+    if (err instanceof Error) {
+      if (err.name === "UserNotConfirmedException") {
+        handleVerificationRequired(email.trim());
+
+      } else if (err.name === "UserNotFoundException") {
+        toast.error("No account found with this email address.");
+
+      } else if (err.name === "NotAuthorizedException") {
+        toast.error("Invalid email or password. Please check your details and try again.");
+        
+      } else if (err.name === "UserAlreadyAuthenticatedException") {
+        toast.error("An existing session is active. Please try again.");
+
       } else {
-        toast.error("Unable to sign in. Please try again.");
+        console.error("Sign-in error:", err);
+        toast.error(err.message);
       }
-    } finally {
-      setLoading(false);
-    
+    } else {
+      toast.error("Unable to sign in. Please try again.");
+    }
+  } finally {
+    setLoading(false);
   }
 };
+
 
 
 
@@ -155,33 +194,40 @@ console.log("Access token scopes:", payload.scope);
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Password
-            </label>
+         <div>
+  <label className="mb-2 block text-sm font-medium">
+    Password
+  </label>
 
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:border-primary"
-              autoComplete="current-password"
-              required
-            />
-          </div>
+  <input
+    type={showPassword ? "text" : "password"}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Enter your password"
+    className="w-full rounded-lg border border-border bg-background px-4 py-3 outline-none focus:border-primary"
+    autoComplete="current-password"
+    required
+  />
+</div>
 
-          <label className="flex items-center gap-2 text-sm text-foreground/70">
-            <input
-              type="checkbox"
-              checked={showPassword}
-              onChange={(e) => setShowPassword(e.target.checked)}
-              className="accent-primary"
-            />
-            Show password
-          </label>
+<div className="flex justify-end">
+  <Link
+    to="/forgot-password"
+    className="text-sm font-medium text-primary hover:underline"
+  >
+    Forgot password?
+  </Link>
+</div>
 
-    
+<label className="flex items-center gap-2 text-sm text-foreground/70">
+  <input
+    type="checkbox"
+    checked={showPassword}
+    onChange={(e) => setShowPassword(e.target.checked)}
+    className="accent-primary"
+  />
+  Show password
+</label>
 
           <button
             type="submit"
@@ -196,7 +242,7 @@ console.log("Access token scopes:", payload.scope);
           Don't have an account?{" "}
           <button
             type="button"
-            onClick={onSignUp}
+            onClick={handleSignUp}
             className="font-medium text-primary hover:underline"
           >
             Sign up

@@ -21,18 +21,23 @@ model User {
 }
 
 model Animal {
-  id                String   @id @default(uuid())
-  tagNumber         String   @unique
-  name              String?
-  species           String
-  breed             String?
-  vaccinationStatus String?
-  notes             String?
-  ownerId           String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  alerts            Alert[]
-  owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid())
+  tagNumber      String
+  name           String?
+  species        String
+  breed          String?
+  sex            String?
+  dateOfBirth    DateTime?
+  ageIsEstimated Boolean  @default(false)
+  imageKey       String?
+  notes          String?
+  ownerId        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  alerts         Alert[]
+  owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, tagNumber])
 }
 
 model Alert {
